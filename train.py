@@ -6,7 +6,7 @@ if __name__ == '__main__':
     experiment = 'version'
     # TODO: Maybe move all dataset to google drive and on start download it
     data_path = 'data.yaml'
-    n_epochs = 20
+    n_epochs = 1
     bs = 8
     n_workers = bs
     gpu_id = 0
