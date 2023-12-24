@@ -1,34 +1,40 @@
+import argparse
 from ultralytics import YOLO
 from utils.model_handler import best_model
 
+parser = argparse.ArgumentParser(
+    prog="Train Model"
+)
+
+parser.add_argument('--model_name', default="version")
+parser.add_argument('--out_path', default='./versions')
+parser.add_argument('--epochs', default=10)
+parser.add_argument('--gpu_id', default=0)
+
 if __name__ == '__main__':
-    # TODO: Move this value maybe to env or like a arguments of script
-    experiment = 'version'
     # TODO: Maybe move all dataset to google drive and on start download it
     data_path = 'data.yaml'
-    n_epochs = 1
     bs = 8
     n_workers = bs
-    gpu_id = 0
     verbose = True
     rng = 0
     validate = True
     patience = 0
-    project = './versions'
+    args = parser.parse_args()
 
     model = YOLO(best_model())
 
     results = model.train(
         # device gpu
-        device="0",
+        device=args.gpu_id,
         data=data_path,
-        epochs=n_epochs,
+        epochs=int(args.epochs),
         batch=bs,
         verbose=verbose,
         seed=rng,
         val=validate,
-        project=project,
-        name=experiment,
+        project=args.out_path,
+        name=args.model_name,
         workers=n_workers,
         patience=patience
     )

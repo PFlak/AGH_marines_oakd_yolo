@@ -11,7 +11,6 @@ files = [f for f in os.listdir("./datasets/valid/images")]
 model = YOLO(best_model())
 for file in files:
     img = cv2.imread(os.path.join("./datasets/valid/images", file))
-    # load the pre-trained YOLOv8n model
     results = model.predict(img)
     for r in results:
         for box in r.boxes:
