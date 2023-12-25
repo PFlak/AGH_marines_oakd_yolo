@@ -1,12 +1,11 @@
 import os
-
 import cv2
 from ultralytics import YOLO
-
 from utils.model_handler import best_model
 
 x_line = 10
-
+if not os.path.isdir("./out/"):
+    os.mkdir("./out/")
 files = [f for f in os.listdir("./datasets/valid/images")]
 model = YOLO(best_model())
 for file in files:
@@ -22,4 +21,7 @@ for file in files:
                 print(b)
                 print(startpos, endpos)
                 cv2.rectangle(img, startpos, endpos, (255, 0, 0), 2)
+                cv2.putText(img, r.names[c.item()], (startpos[0], startpos[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12),
+                            2)
+    print(os.path.join("./out/", file))
     cv2.imwrite(os.path.join("./out/", file), img)
