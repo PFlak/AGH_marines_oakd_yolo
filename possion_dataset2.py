@@ -57,25 +57,34 @@ def get_boxes(source_name):
 
 
 def source_elements(source_name):
+    start_time = time.perf_counter()
     source = cv2.imread(path.join(INPUT_DIR, "images", source_name))
     boxes = get_boxes(source_name)
     mask = create_mask(source.shape[0], source.shape[1], boxes)
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     M = np.float32([[1, 0, 0], [0, 1, 0]])
-
+    print("stage 1", time.perf_counter() - start_time)
+    start_time = time.perf_counter()
     y_max, x_max = source.shape[:-1]
     y_min, x_min = 0, 0
     x_range = x_max - x_min
     y_range = y_max - y_min
 
+    print("stage 2", time.perf_counter() - start_time)
+    start_time = time.perf_counter()
     source = cv2.warpAffine(source, M, (x_range, y_range))
 
+    print("stage 3", time.perf_counter() - start_time)
+    start_time = time.perf_counter()
     mask = mask[y_min:y_max, x_min:x_max]
     mask[mask != 0] = 1
 
-    mat_A = laplacian_matrix(y_range, x_range)
+    mat_A = laplacian_matrix(y_range, x_range)  # ~ 4s
     laplacian = mat_A.tocsc()
-    for y in range(1, y_range - 1):
+
+    print("stage 4", time.perf_counter() - start_time)
+    start_time = time.perf_counter()
+    for y in range(1, y_range - 1):  # ~ 7s
         for x in range(1, x_range - 1):
             if mask[y, x] == 0:
                 k = x + y * x_range
@@ -84,8 +93,13 @@ def source_elements(source_name):
                 mat_A[k, k - 1] = 0
                 mat_A[k, k + x_range] = 0
                 mat_A[k, k - x_range] = 0
+
+    print("stage 5", time.perf_counter() - start_time)
+    start_time = time.perf_counter()
     mat_A = mat_A.tocsc()
     mask_flat = mask.flatten()
+
+    print("stage 6", time.perf_counter() - start_time)
     return source, mat_A, mask_flat, laplacian
 
 
@@ -98,7 +112,7 @@ def edit(source_name, source, mat_A, mask_flat, laplacian, target):
     x_range = x_max - x_min
     y_range = y_max - y_min
 
-    print("2.", time.perf_counter() - start_time)
+    print("1.", time.perf_counter() - start_time)
     start_time = time.perf_counter()
     for channel in range(source.shape[2]):
         source_flat = source[y_min:y_max, x_min:x_max, channel].flatten()
@@ -120,7 +134,7 @@ def edit(source_name, source, mat_A, mask_flat, laplacian, target):
         x = x.astype('uint8')
 
         target[y_min:y_max, x_min:x_max, channel] = x
-    print("3.", time.perf_counter() - start_time)
+    print("2.", time.perf_counter() - start_time)
     name = uuid.uuid4()
     cv2.imwrite(path.join(INPUT_DIR, "images", str(name) + ".jpg"), target)
 
@@ -146,7 +160,7 @@ def worker(file):
     for background in backgrounds:
         edit(file, source, mat_A, mask_flat, laplacian, background)
         # with lock_a:
-        print(i, len(backgrounds) * len(files), int(i / (len(backgrounds) * len(files)) * 100))
+        # print(i, len(backgrounds) * len(files), int(i / (len(backgrounds) * len(files)) * 100))
         i += 1
     # with lock_a:
     print("complete", time.perf_counter() - start_time)
@@ -154,11 +168,11 @@ def worker(file):
 
 a = time.perf_counter()
 # pool = Pool(POOL_SIZE)
-
+backgrounds = [backgrounds[0]]
 print("START")
-for file in files:
-    # pool.apply_async(worker, (file,))
-    worker(file)
+# for file in files:
+# pool.apply_async(worker, (file,))
+worker("0a11ea09-fb38-4c66-aee1-652791a78aa0.jpg")
 # pool.close()
 # pool.join()
 print("END", time.perf_counter() - a)
