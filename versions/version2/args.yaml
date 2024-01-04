@@ -1,7 +1,7 @@
 task: detect
 mode: train
 model: D:\projekty\PycharmProjects\AGH_marines_oakd_yolo\versions\version\weights\best.pt
-data: data.yaml
+data: data1.yaml
 epochs: 5
 time: null
 patience: 0
