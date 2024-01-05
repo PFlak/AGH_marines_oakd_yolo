@@ -3,6 +3,7 @@ import threading
 import uuid
 import scipy.sparse
 import shutil
+import argparse
 from os import path
 import cv2
 import numpy as np
@@ -10,9 +11,18 @@ from multiprocessing.pool import ThreadPool as Pool
 from scipy.sparse.linalg import spsolve
 import time
 
-BACKGROUND_DIR = "backgrounds"
-INPUT_DIR = "datasets/train"
-POOL_SIZE = 16
+parser = argparse.ArgumentParser(
+    prog="Passion Dataset"
+)
+
+parser.add_argument('--background_dir', default="backgrounds")
+parser.add_argument('--input_dir', default="datasets/train")
+parser.add_argument('--pool_size', default=16)
+
+args = parser.parse_args()
+BACKGROUND_DIR = args.background_dir
+INPUT_DIR = args.input_dir
+POOL_SIZE = args.pool_size
 
 backgrounds = []
 
@@ -80,7 +90,6 @@ def source_elements(source_name):
 
     mask = mask[y_min:y_max, x_min:x_max]
     mask[mask != 0] = 1
-    print(y_range, x_range)
     mat_A = laplacian_matrix(y_range, x_range)
     laplacian = mat_A.tocsc()
     for y in range(1, y_range - 1):
@@ -134,7 +143,7 @@ def edit(source_name, source, mat_A, mask_flat, laplacian, target):
 
 
 load_background(640, 640)
-
+laplacian_matrix(640, 640)
 files = [f for f in os.listdir(os.path.join(INPUT_DIR, "images"))]
 i = 0
 
