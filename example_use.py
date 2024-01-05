@@ -12,7 +12,7 @@ if not os.path.isdir(out_dir):
     os.mkdir(out_dir)
 
 files = [f for f in os.listdir(os.path.join(input_dir, "images"))]
-model = YOLO(best_model())
+model = YOLO(best_model("versions"))
 for file in files:
     img = cv2.imread(os.path.join(input_dir, "images", file))
     results = model.predict(img)

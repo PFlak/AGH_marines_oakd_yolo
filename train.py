@@ -13,7 +13,7 @@ parser.add_argument('--gpu_id', default=0)
 
 if __name__ == '__main__':
     # TODO: Maybe move all dataset to google drive and on start download it
-    data_path = 'data1.yaml'
+    data_path = 'data.yaml'
     bs = 8
     n_workers = bs
     verbose = True
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     patience = 0
     args = parser.parse_args()
 
-    model = YOLO(best_model())
+    model = YOLO(best_model(args.out_path))
 
     results = model.train(
         # device gpu
