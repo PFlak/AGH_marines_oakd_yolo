@@ -15,9 +15,13 @@ INPUT_DIR = "datasets/valid"
 POOL_SIZE = 8
 
 backgrounds = []
+laplacian_matrix_cache = {}
+mat_A_cache = {}
 
 
 def laplacian_matrix(n, m):
+    if (n, m) in laplacian_matrix_cache:
+        return laplacian_matrix_cache[(n, m)]
     mat_D = scipy.sparse.lil_matrix((m, m))
     mat_D.setdiag(-1, -1)
     mat_D.setdiag(4)
@@ -27,7 +31,7 @@ def laplacian_matrix(n, m):
 
     mat_A.setdiag(-1, 1 * m)
     mat_A.setdiag(-1, -1 * m)
-
+    laplacian_matrix_cache[(n, m)] = mat_A
     return mat_A
 
 
@@ -84,6 +88,7 @@ def source_elements(source_name):
 
     print("stage 4", time.perf_counter() - start_time)
     start_time = time.perf_counter()
+
     for y in range(1, y_range - 1):  # ~ 7s
         for x in range(1, x_range - 1):
             if mask[y, x] == 0:
@@ -172,7 +177,8 @@ backgrounds = [backgrounds[0]]
 print("START")
 # for file in files:
 # pool.apply_async(worker, (file,))
-worker("0a11ea09-fb38-4c66-aee1-652791a78aa0.jpg")
+worker("text.jpg")
+# worker("0a11ea09-fb38-4c66-aee1-652791a78aa0.jpg")
 # pool.close()
 # pool.join()
 print("END", time.perf_counter() - a)

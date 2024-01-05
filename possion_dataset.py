@@ -11,13 +11,19 @@ from scipy.sparse.linalg import spsolve
 import time
 
 BACKGROUND_DIR = "backgrounds"
-INPUT_DIR = "datasets/valid"
-POOL_SIZE = 8
+INPUT_DIR = "datasets/train"
+POOL_SIZE = 16
 
 backgrounds = []
 
+laplacian_matrix_cache = {}
+
+lock_a = threading.Lock()
+
 
 def laplacian_matrix(n, m):
+    if (n, m) in laplacian_matrix_cache:
+        return laplacian_matrix_cache[(n, m)].copy()
     mat_D = scipy.sparse.lil_matrix((m, m))
     mat_D.setdiag(-1, -1)
     mat_D.setdiag(4)
@@ -28,7 +34,9 @@ def laplacian_matrix(n, m):
     mat_A.setdiag(-1, 1 * m)
     mat_A.setdiag(-1, -1 * m)
 
-    return mat_A
+    with lock_a:
+        laplacian_matrix_cache[(n, m)] = mat_A
+    return mat_A.copy()
 
 
 def load_background(width, height):
@@ -72,7 +80,7 @@ def source_elements(source_name):
 
     mask = mask[y_min:y_max, x_min:x_max]
     mask[mask != 0] = 1
-
+    print(y_range, x_range)
     mat_A = laplacian_matrix(y_range, x_range)
     laplacian = mat_A.tocsc()
     for y in range(1, y_range - 1):
@@ -90,7 +98,6 @@ def source_elements(source_name):
 
 
 def edit(source_name, source, mat_A, mask_flat, laplacian, target):
-    start_time = time.perf_counter()
     target = target.copy()
 
     y_max, x_max = target.shape[:-1]
@@ -98,8 +105,6 @@ def edit(source_name, source, mat_A, mask_flat, laplacian, target):
     x_range = x_max - x_min
     y_range = y_max - y_min
 
-    print("2.", time.perf_counter() - start_time)
-    start_time = time.perf_counter()
     for channel in range(source.shape[2]):
         source_flat = source[y_min:y_max, x_min:x_max, channel].flatten()
         target_flat = target[y_min:y_max, x_min:x_max, channel].flatten()
@@ -120,7 +125,6 @@ def edit(source_name, source, mat_A, mask_flat, laplacian, target):
         x = x.astype('uint8')
 
         target[y_min:y_max, x_min:x_max, channel] = x
-    print("3.", time.perf_counter() - start_time)
     name = uuid.uuid4()
     cv2.imwrite(path.join(INPUT_DIR, "images", str(name) + ".jpg"), target)
 
@@ -133,7 +137,6 @@ load_background(640, 640)
 
 files = [f for f in os.listdir(os.path.join(INPUT_DIR, "images"))]
 i = 0
-lock_a = threading.Lock()
 
 
 def worker(file):
