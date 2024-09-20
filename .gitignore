@@ -164,3 +164,7 @@ cython_debug/
 datasets/
 data.yaml
 out/
+yolov8n.pt
+trash
+runs
+*.zip
